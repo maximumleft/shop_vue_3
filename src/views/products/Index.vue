@@ -2,7 +2,9 @@
 export default {
   methods:{
     getProducts(){
-      this.axios.get('http://127.0.0.1:8000/api/products')
+      this.axios.post('http://127.0.0.1:8000/api/products',{
+
+      })
           .then( res => {
             this.products = res.data.products;
           })
@@ -23,19 +25,58 @@ export default {
                 }
               });
               $("#priceRange").val("$" + $("#price-range").slider("values", 0) + " - $" + $("#price-range").slider("values", 1));
-            };
+            }
           })
+    },
+    filterProducts(){
+      let prices = $(`#priceRange`).val()
+
+      this.prices = prices.replace(/[\s+]|[$]/g, '').split('-')
+
+      this.axios.post('http://127.0.0.1:8000/api/products',{
+        'categories': this.categories,
+        'colors': this.colors,
+        'tags': this.tags,
+        'prices': this.prices,
+      })
+          .then( res => {
+            this.products = res.data.products;
+          })
+      console.log(prices);
+    },
+    addColor(id){
+    if(!this.colors.includes(id)){
+      this.colors.push(id)
+    } else {
+      this.colors = this.colors.filter( elem =>{
+        return elem !== id
+      })
+    }
+    },
+    addTag(id){
+      if(!this.tags.includes(id)){
+        this.tags.push(id)
+      } else {
+        this.tags = this.tags.filter( elem =>{
+          return elem !== id
+        })
+      }
     },
   },
   data(){
     return {
       products: [],
       filterList: [],
+      categories: [],
+      colors: [],
+      tags: [],
+      prices: [],
     }
   },
   mounted() {
+    this.filterProducts();
     this.getProducts();
-    this.getFilterList()
+    this.getFilterList();
   }
 }
 
@@ -143,7 +184,7 @@ export default {
                   <h4>Select Categories</h4>
                   <div class="checkbox-item">
                     <form>
-                      <div v-for="category in filterList.categories" class="form-group"> <input type="checkbox" :id="category.id"> <label
+                      <div v-for="category in filterList.categories" class="form-group"> <input :value="category.id" v-model="categories" type="checkbox" :id="category.id"> <label
                           :for="category.id">{{category.title}}</label> </div>
                     </form>
                   </div>
@@ -152,7 +193,7 @@ export default {
                   <h4>Color Option </h4>
                   <ul class="color-option">
                     <li v-for="color in filterList.colors">
-                      <a href="#0" class="color-option-single" :style="`background: #${color.title}`" > </a>
+                      <a @click.prevent="addColor(color.id)" href="#0" class="color-option-single" :style="`background: #${color.title}`" > </a>
                     </li>
 
                   </ul>
@@ -162,14 +203,19 @@ export default {
                   <div class="slider-box">
                     <div id="price-range" class="slider"></div>
                     <div class="output-price"> <label for="priceRange">Price:</label> <input
-                        type="text" id="priceRange" readonly> </div> <button class="filterbtn"
-                                                                             type="submit"> Filter </button>
+                        type="text" id="priceRange" readonly>
+                    </div>
+                    <button @click.prevent="filterProducts" class="filterbtn"
+                            type="submit"> Filter
+                    </button>
                   </div>
                 </div>
                 <div class="single-sidebar-box mt-30 wow fadeInUp animated pb-0 border-bottom-0 ">
                   <h4>Tags </h4>
                   <ul class="popular-tag">
-                    <li v-for="tag in filterList.tags"><a href="#0">{{ tag.title }}</a></li>
+                    <li v-for="tag in filterList.tags">
+                      <a @click.prevent="addTag(tag.id)" href="#0">{{ tag.title }}</a>
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -189,12 +235,8 @@ export default {
                       <div class="select-box">
                         <select class="wide">
                           <option data-display="Short by latest">Featured </option>
-                          <option value="1">Best selling </option>
-                          <option value="2">Alphabetically, A-Z</option>
-                          <option value="3">Alphabetically, Z-A</option>
                           <option value="3">Price, low to high</option>
                           <option value="3">Price, high to low</option>
-                          <option value="3">Date, old to new</option>
                         </select>
                       </div>
                     </div>
