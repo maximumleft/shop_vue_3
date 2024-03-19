@@ -1,6 +1,34 @@
 <script>
 export default {
   methods: {
+    addToCart(id){
+      let cart = localStorage.getItem('cart')
+
+      let newProduct = [
+        {
+          'id': id,
+          'qty': 1,
+        }
+      ]
+      if(!cart){
+        localStorage.setItem('cart',JSON.stringify(newProduct))
+      } else {
+        cart = JSON.parse(cart)
+
+        cart.forEach(productInCart =>
+        {
+          if(productInCart.id === id){
+            productInCart.qty = Number(productInCart.qty) + 1
+            newProduct = null
+          }
+        })
+
+        Array.prototype.push.apply(cart, newProduct)
+
+        localStorage.setItem('cart',JSON.stringify(cart))
+      }
+
+    },
     getProducts(page = 1) {
       this.axios.post('http://127.0.0.1:8000/api/products', {
         'categories': this.categories,
@@ -277,17 +305,14 @@ export default {
 
                         <div v-for="product in products" class="col-xl-4 col-lg-6 col-6 ">
                           <div class="products-three-single w-100  mt-30">
-                            <div class="products-three-single-img"><a
-                                href="shop-details-3.html" class="d-block"> <img
-                                :src="product.preview_image"
-                                class="first-img" alt=""/> <img
-                                :src="product.second_image"
-                                alt="" class="hover-img"/>
-                            </a>
+                            <div class="products-three-single-img">
+                              <router-link :to="{name: 'products.show',params:{id: product.id}}"><img :src="product.preview_image" class="first-img" alt=""/>
+                                <img :src="product.second_image" alt="" class="hover-img"/>  </router-link>
+
                               <div class="products-grid-one__badge-box"> <span
                                   class="bg_base badge new ">New</span>
                               </div>
-                              <a href="cart.html" class="addcart btn--primary style2">
+                              <a @click.prevent="addToCart(product.id)" href="cart.html" class="addcart btn--primary style2">
                                 Add To Cart </a>
                               <div class="products-grid__usefull-links">
                                 <ul>
@@ -303,7 +328,7 @@ export default {
                             </div>
                             <div class="products-three-single-content text-center">
                               <span>{{ product.category.title }}</span>
-                              <h5><a href="shop-details-3.html"> {{ product.title }} </a>
+                              <h5><router-link :to="{name: 'products.show',params:{id: product.id}}"> {{ product.title }} </router-link>
                               </h5>
                               <p>
                                 <del>${{ product.old_price }}</del>
